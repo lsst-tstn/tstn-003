@@ -203,6 +203,22 @@ Once you think you have a working recipe, you can attempt to build it by invokin
 
 Conda-build will then run through the process by installing the package and running whatever tests(unit tests and import tests) that you specified in the recipe.
 
+Development Mode
+----------------
+Development in Conda requires setting up the base Conda environment(already done for you).
+This next part becomes a debate on the defination of developing with conda, because you'll technically be using pip to setup up your source code.
+In your directory where setup.py is, run the following in your terminal.
+
+.. code::
+
+  pip install -e .
+
+This will install your package as a symlink to the site-packages directory where you can change the source code and have your ide pick up changes.
+You may see a command in conda called `conda develop`, this is not recommended by the maintainers of conda, as it does not behave similiar to `pip install -e`.
+Building docs for packages is as simple as using `package-docs build` in the docs or doc directory of the package.
+This tool is built for LSST documentation needs.
+If running unit tests, just run the `pytest` command in the root directory and pytest will automatically find the tests in the tests subfolder.
+
 .. code::
 
   # install code in editable mode, this creates symlinks to the site-packages directory with the code directory
