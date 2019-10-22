@@ -10,7 +10,7 @@ install:
 script:
   - sphinx-build -b html -a -n -d _build/doctree . _build/html
 after_success:
-  - ltd upload --travis --dir _build/html --product dmtn-003
+  - ltd upload --travis --dir _build/html --product tstn-003
 env:
   global:
     -
