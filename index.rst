@@ -203,6 +203,17 @@ Once you think you have a working recipe, you can attempt to build it by invokin
 
 Conda-build will then run through the process by installing the package and running whatever tests(unit tests and import tests) that you specified in the recipe.
 
+.. code::
+
+  # install code in editable mode, this creates symlinks to the site-packages directory with the code directory
+  # conda develop is not recommended
+  pip install -e .
+  # Use pytest command to run unit tests
+  pytest
+  # build docs using package-docs
+  package-docs build # may need to be in doc folder
+
+
 An Example CSC
 ==============
 

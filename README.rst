@@ -1,4 +1,4 @@
-.. image:: https://img.shields.io/badge/dmtn--003-lsst.io-brightgreen.svg
+.. image:: https://img.shields.io/badge/tstn--003-lsst.io-brightgreen.svg
    :target: https://tstn-003.lsst.io
 .. image:: https://travis-ci.com/lsst-tstn/tstn-003.svg
    :target: https://travis-ci.com/lsst-tstn/tstn-003
