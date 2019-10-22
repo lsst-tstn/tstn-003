@@ -1,7 +1,7 @@
 .. image:: https://img.shields.io/badge/dmtn--003-lsst.io-brightgreen.svg
-   :target: https://dmtn-003.lsst.io
-.. image:: https://travis-ci.com/lsst-tstn/dmtn-003.svg
-   :target: https://travis-ci.com/lsst-tstn/dmtn-003
+   :target: https://tstn-003.lsst.io
+.. image:: https://travis-ci.com/lsst-tstn/tstn-003.svg
+   :target: https://travis-ci.com/lsst-tstn/tstn-003
 ..
   Uncomment this section and modify the DOI strings to include a Zenodo DOI badge in the README
   .. image:: https://zenodo.org/badge/doi/10.5281/zenodo.#####.svg
@@ -11,17 +11,17 @@
 Conda development guide.
 ########################
 
-DMTN-003
+TSTN-003
 ========
 
 This document contain a developer guide for conda and Telescope Site Software. 
 
 **Links:**
 
-- Publication URL: https://dmtn-003.lsst.io
-- Alternative editions: https://dmtn-003.lsst.io/v
-- GitHub repository: https://github.com/lsst-tstn/dmtn-003
-- Build system: https://travis-ci.com/lsst-tstn/dmtn-003
+- Publication URL: https://tstn-003.lsst.io
+- Alternative editions: https://tstn-003.lsst.io/v
+- GitHub repository: https://github.com/lsst-tstn/tstn-003
+- Build system: https://travis-ci.com/lsst-tstn/tstn-003
 
 
 Build this technical note
@@ -31,8 +31,8 @@ You can clone this repository and build the technote locally with `Sphinx`_:
 
 .. code-block:: bash
 
-   git clone https://github.com/lsst-tstn/dmtn-003
-   cd dmtn-003
+   git clone https://github.com/lsst-tstn/tstn-003
+   cd tstn-003
    pip install -r requirements.txt
    make html
 
@@ -52,7 +52,7 @@ The `DM reStructuredText Style Guide`_ is a good resource for how we write reStr
 Remember that images and other types of assets should be stored in the ``_static/`` directory of this repository.
 See ``_static/README.rst`` for more information.
 
-The published technote at https://dmtn-003.lsst.io will be automatically rebuilt whenever you push your changes to the ``master`` branch on `GitHub <https://github.com/lsst-tstn/dmtn-003>`_.
+The published technote at https://tstn-003.lsst.io will be automatically rebuilt whenever you push your changes to the ``master`` branch on `GitHub <https://github.com/lsst-tstn/tstn-003>`_.
 
 Updating metadata
 =================
