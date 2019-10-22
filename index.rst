@@ -206,7 +206,7 @@ Conda-build will then run through the process by installing the package and runn
 Development Mode
 ----------------
 Development in Conda requires setting up the base Conda environment(already done for you).
-This next part becomes a debate on the defination of developing with conda, because you'll technically be using pip to setup up your source code.
+This next part becomes a debate on the definition of developing with conda, because you'll technically be using pip to setup up your source code.
 In your directory where setup.py is, run the following in your terminal.
 
 .. code::
