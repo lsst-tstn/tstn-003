@@ -91,7 +91,8 @@ To install a package using a particular channel, simply type the following into 
 
 -c  stands for channel and the argument is the name of the channel.
 
-You can search the anaconda-cloud site for packages to install into your environment.
+You can search the `anaconda-cloud site <https://anaconda.org>`_ for packages to install into your
+environment.
 
 .. code:: sh
 
