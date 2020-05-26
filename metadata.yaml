@@ -17,7 +17,10 @@ doc_title: "Conda development guide."
 
 # Author names, ordered as a list. Each author name should be formatted as 'First Last'
 authors:
-  - "Telescope and Site Software"
+  - "Eric Coughlin"
+  - "Tiago Ribeiro"
+  - "Michael Reuter"
+  - "Rob Bovill"
 
 # Current document revision date, YYYY-MM-DD
 # Only set this field if you need to manually fix the revision date;
@@ -34,7 +37,7 @@ authors:
 # doi: 10.5281/zenodo.#####
 
 # Copyright statement
-copyright: "2019, Association of Universities for Research in Astronomy"
+copyright: "2020, Association of Universities for Research in Astronomy"
 
 # Description. A short, 1-2 sentence statemement used by document indices.
 description: "This document contains a developer guide for conda and Telescope Site Software. "

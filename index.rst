@@ -46,47 +46,27 @@
 
 .. note::
 
-   **This technote is not yet published.**
-
    This document contains a developer guide for conda and Telescope Site Software. 
 
 Procedure
 =========
 
-Our conda Docker environment is specially provided by the following `repository. <https://cloud.docker.com/u/lsstts/repository/docker/lsstts/develop-env-conda>`_
-That image is built with the following `Dockerfile. <https://github.com/lsst-ts/ts_Dockerfiles/blob/develop/develop-env/conda/Dockerfile>`_
+Our conda Docker environment is provided by the following `repository. <https://cloud.docker.com/u/lsstts/repository/docker/lsstts/conda-package-builder>`_
+That image is built with the following `Dockerfile. <https://github.com/lsst-ts/ts_Dockerfiles/blob/develop/conda-package-builder/Dockerfile>`_
 
-If you need a ticket version of the xml or of SAL, you can do so by cloning the ts_Dockerfiles repository and running the following command.
-Updating the image with new xml or sal is fairly straightforward, provided that the setup instructions has not changed across versions.
-Incidentally, only SAL 3.10.x has been tested with this setup.
-In the directory where the Dockerfile is located invoke the following shell command.
+Run the image with the following ``docker run -it -env {config_package}_DIR=/home/saluser/{config_package} lsstts/conda_package_builder``
+Include the recipe for the conda package in a ``conda`` directory inside of the python software package.
+This image provides our common conda packages needed for building and using conda packages.
+The following is the list of packages installed in the base environment of the image.
 
-.. code::
-
-    docker build --build-args xml_branch={xml_tag},sal_branch={sal_branch} -t lsstts/develop-env-conda:xml{version}_sal{version}
-
-There are already several pre-built versions of this image with different versions of ts_xml.
-They are already located on dockerhub as tags of the image.
-To get started with development, run the image with the following command.
-
-.. code::
-
-    docker run -v {develop_mount}:{develop_location} lsstts/develop-env-conda:xml{version}_sal{version}
-
-By default, the following packages are available for use.
-
-* ts_xml
-* ts_sal
-* ts-salobj - installed as a conda package
-* ts_idl
-* OpenSplice - installed as an RPM package hosted by the LSST nexus repository
-* pydds - Part of OpenSplice
-* conda-build
+* ts-idl
+* ts-dds
+* ts-xml
 
 Working with Conda
 ------------------
-Using Conda is fairly straightforward.
 Conda is a package manager which works by managing environments.
+The key thing for conda is that it works for packages besides python packages.
 Environments are isolated spaces and work best for managing individual software package requirements.
 Our development environment carries alot of commonalities and therefore the base environment is already setup with many of the important dependencies.
 If you create a new environment, the packages from the base environment are inherited into the new environment,
@@ -105,20 +85,25 @@ It is located `here <https://anaconda.org/lsstts>`_.
 By default there are several channels installed with your conda environment.
 To install a package using a particular channel, simply type the following into your prompt.
 
-.. code::
+.. code:: sh
 
     conda install -c lsstts ts-salobj
 
 -c  stands for channel and the argument is the name of the channel.
 
-You can search the website for packages to install into your environment.
+You can search the `anaconda-cloud site <https://anaconda.org>`_ for packages to install into your
+environment.
 
-.. code::
+.. code:: sh
 
     conda install {package}
     conda remove {package}
     conda create -n {name_of_environment} [{list of packages to install}]
     conda activate {name_of_environment}
+    conda deactivate
+
+You can type the following command to get help for more commands that conda provides
+``conda --help``.
 
 
 Creating Conda packages
@@ -197,7 +182,23 @@ For more information on this topic, check the official `documentation. <https://
 
 Once you think you have a working recipe, you can attempt to build it by invoking the following command.
 
-.. code::
+More advanced features include creating pre-install and post install scripts that run before or after a
+package is installed.
+They are located in the same directory as the recipe.
+The files are called
+
+::
+  
+    .
+    |____pre-unlink.sh
+    |____pre-link.sh
+    |____post-link.sh
+
+The ``post-link.sh`` is used for creating a package like the ts-salpy-test package.
+It creates a ``sal.pth`` file located in the conda python site-packages directory which tells conda to look
+for python packages in another location.
+
+.. code:: sh
 
     conda-build {recipe_location}
 
@@ -219,7 +220,7 @@ Building docs for packages is as simple as using `package-docs build` in the doc
 This tool is built for LSST documentation needs.
 If running unit tests, just run the `pytest` command in the root directory and pytest will automatically find the tests in the tests subfolder.
 
-.. code::
+.. code:: sh
 
   # install code in editable mode, this creates symlinks to the site-packages directory with the code directory
   # conda develop is not recommended
@@ -233,7 +234,8 @@ If running unit tests, just run the `pytest` command in the root directory and p
 An Example CSC
 ==============
 
-ts_ATDome is a CSC that should be a relative easy example to port to a conda package.
+ts_ATDome is a CSC that has a good working example of a conda package.
+Here's a general/specific procedure for porting a package to conda.
 The first step that I like to use, is to determine what the dependencies are for the package.
 In EUPs, you can find the dependencies through the {name_of_product}.table.
 This only lists the high-level EUPs products so there may be unspecified dependencies.
@@ -258,22 +260,42 @@ Using the `setup.py <https://github.com/lsst-ts/ts_sal/blob/develop/setup.py>`_ 
 
 .. code:: python
 
-    from setuptools import setup, find_namespace_packages
+    import os
+    import sys
+    import setuptools
+    import pathlib
 
     install_requires = []
-    tests_requires = ["pytest", "pytest-flake8"]
-    dev_requires = install_requires + tests_requires + ["documenteer[pipelines]"]
+    tests_require = ["pytest", "pytest-cov", "pytest-flake8", "asynctest"]
+    dev_requires = install_requires + tests_require + ["documenteer[pipelines]"]
+    scm_version_template = """# Generated by setuptools_scm
+    __all__ = ["__version__"]
+    __version__ = "{version}"
+    """
+    tools_path = pathlib.PurePosixPath(setuptools.__path__[0])
+    base_prefix = pathlib.PurePosixPath(sys.base_prefix)
+    data_files_path = tools_path.relative_to(base_prefix).parents[1]
 
-    setup(
+    setuptools.setup(
         name="ts_ATDome",
-        description="Installs python code for ts_ATDome.",
-        setup_requires=["setuptools_scm"],
+        description="LSST auxiliary telescope dome controller",
+        use_scm_version={"write_to": "python/lsst/ts/ATDome/version.py",
+                        "write_to_template": scm_version_template},
+        setup_requires=["setuptools_scm", "pytest-runner"],
+        install_requires=install_requires,
         package_dir={"": "python"},
-        packages=find_namespace_packages(where="python"),
+        packages=setuptools.find_namespace_packages(where="python"),
+        package_data={"": ["*.rst", "*.yaml"]},
+        data_files=[(os.path.join(data_files_path, "schema"),
+                    ["schema/ATDome.yaml"])],
         scripts=["bin/run_atdome.py"],
         tests_require=tests_require,
         extras_require={"dev": dev_requires},
-        license="GPL"
+        license="GPL",
+        project_urls={
+            "Bug Tracker": "https://jira.lsstcorp.org/secure/Dashboard.jspa",
+            "Source Code": "https://github.com/lsst-ts/ts_ATDome",
+        }
     )
 
 This file will add the ts_ATDome package to the package-sites directory of the python install, which is included as the default spot to look for python packages.
@@ -283,9 +305,7 @@ However, if errors do pop up, then check the following
 
 * typos in the parameters, especially the require fields
 
-The next step is to check out `ts_recipes <https://github.com/lsst-ts/ts_recipes>`_, which is where our conda recipes are located.
-Create a branch using the gitflow workflow.
-Now create a subdirectory called ts_ATDome.
+Now create a subdirectory called conda.
 This directory is where the recipe will go.
 Create a meta.yaml file within this directory.
 
@@ -298,8 +318,7 @@ Create a meta.yaml file within this directory.
       version: {{ data.get('version') }}
 
     source:
-      git_url: https://github.com/lsst-ts/ts_ATDome
-      git_rev: {ticket_branch}
+      path: ../
 
     build:
       skip: True #[win]
@@ -308,11 +327,11 @@ Create a meta.yaml file within this directory.
         - PATH
         - PYTHONPATH
         - LD_LIBRARY_PATH
-        - LSST_SDK_INSTALL
         - OSPL_HOME
         - LSST_DDS_DOMAIN
         - PYTHON_BUILD_VERSION
         - PYTHON_BUILD_LOCATION
+        - TS_CONFIG_ATTCS_DIR
 
     requirements:
       host:
@@ -331,28 +350,38 @@ Create a meta.yaml file within this directory.
         - pytest
         - pytest-flake8
         - pytest-cov
+        - asynctest
+        - pytest-tornasync
+        - numpy
+        - astropy
+        - jsonschema
+        - pyyaml
+        - boto3
+        - moto
+        - ts-dds
+        - ts-idl
+        - ts-salobj
+      source_files:
+        - python
+        - bin
+        - tests
+        - setup.cfg
       commands:
-        - py.test --pyargs lsst.ts.ATDome tests/
+        - py.test
 
 This file will get you through the steps of building and testing the conda package.
 You can test it and see if you run into any issues.
 If you run into an issue of a package not being found such as pytest-flake8, run the following.
 
-.. code::
+.. code:: sh
 
     conda config --add channels forge
 
 This is how you permanently add channels to your configuration.
 
-For ts_config_attcs support, type the following into your shell.
-
-.. code::
-
-    TS_CONFIG_ATTCS=$HOME/repos/ts_config_attcs
-
 Once you have a built package, you can install it by typing in the following
 
-.. code::
+.. code:: sh
 
     conda install {location_of_package} # this is found in the final line of a successful conda build
 
@@ -369,6 +398,86 @@ To upload a package, invoke the following in your terminal
 
 Upon success, your package will now be uploaded to the channel for distribution purposes.
 
+Once you have a successful build, you can start writing a CI file to build the conda package as a release tag.
+ts_ATMCS-simulator has a good working example for this.
+Create a file called Jenkinsfile in the root directory of your CSC.
+
+.. code::
+
+  pipeline {
+    agent any
+    environment {
+        package_name = "atmcs-simulator"
+        package_version = sh(returnStdout: true, script: "git describe --tags --always --dirty").trim()
+        dockerImageName = "lsstts/conda_package_builder:latest"
+        container_name = "salobj_${BUILD_ID}_${JENKINS_NODE_COOKIE}"
+    }
+
+    stages {
+        stage("Pull Docker Image") {
+            steps {
+                script {
+                sh """
+                docker pull ${dockerImageName}
+                """
+                }
+            }
+        }
+        stage("Start builder"){
+            steps {
+                script {
+                    sh """
+                    docker run --name ${container_name} -di --rm \
+                        --env TS_CONFIG_ATTCS_DIR=/home/saluser/ts_config_attcs \
+                        --env LSST_DDS_DOMAIN=citest \
+                        -v ${WORKSPACE}:/home/saluser/source ${dockerImageName}
+                    """
+                }
+            }
+        }
+        stage("Clone ts_config_attcs"){
+            steps {
+                script {
+                    sh """
+                    docker exec ${container_name} sh -c "git clone https://github.com/lsst-ts/ts_config_attcs.git"
+                    """
+                }
+            }
+        }
+        stage("Create ATMCS Simulator Conda package") {
+            steps {
+                script {
+                    sh """
+                    docker exec ${container_name} sh -c 'cd ~/source/conda && source ~/miniconda3/bin/activate && source "\$OSPL_HOME/release.com" && conda build --prefix-length 100 .'
+                    """
+                }
+            }
+        }
+        stage("Push ATMCS Simulator package") {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'CondaForge', passwordVariable: 'anaconda_pass', usernameVariable: 'anaconda_user')]) {
+                    script {
+                        sh """
+                        docker exec ${container_name} sh -c "source ~/miniconda3/bin/activate && \
+                            anaconda login --user ${anaconda_user} --password ${anaconda_pass} && \
+                            anaconda upload -u lsstts --force \
+                            ~/miniconda3/conda-bld/linux-64/ts-${package_name}*.tar.bz2"
+                        """
+                    }
+                }
+            }
+        }
+    }
+    post {
+        cleanup {
+            sh """
+            docker stop ${container_name}
+            """
+        }
+    }
+  }
+
+
 Q and A
 =======
 
@@ -376,6 +485,10 @@ What about EUPs's tagging system?
     DM has not established what they are going to do in this situation.
 What about applications that integrate with the LSST Science Pipeline(LSP)?
     DM has agreed to support that software becoming conda packages.
+
+Sources
+=======
+* https://docs.conda.io/projects/conda-build/en/latest/
 
 .. Add content here.
 .. Do not include the document title (it's automatically added from metadata.yaml).
